@@ -1,0 +1,65 @@
+version: '3'
+services:
+
+  app-pizza:
+    build: ./
+    image: php:8.1-fpm
+    ports:
+      - "9000:9000"
+    container_name: app-pizza
+    restart: unless-stopped
+    tty: true
+    environment:
+      SERVICE_NAME: app-pizza
+      SERVICE_TAGS: dev
+      PHP_XDEBUG_ENABLED: 1
+      XDEBUG_CONFIG: "${XDEBUG_CONFIG}"
+    working_dir: /var/www
+    volumes:
+      - ./backend:/var/www
+    networks:
+      - app-network
+
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    restart: unless-stopped
+    tty: true
+    ports:
+      - "80:80"
+    links:
+      - app-pizza
+    volumes:
+      - ./backend:/var/www
+      - ./nginx/conf.d/:/etc/nginx/conf.d/
+    networks:
+      - app-network
+    depends_on:
+      - app-pizza
+
+  db-pizza:
+    image: mysql:5.7.22
+    container_name: db-pizza
+    restart: unless-stopped
+    tty: true
+    #    ports:
+    #      - "3307:3307"
+    environment:
+      MYSQL_DATABASE: pizza-test
+      MYSQL_ROOT_PASSWORD: 1
+      SERVICE_NAME: mysql
+    volumes:
+      - ./dbdata/:/var/lib/mysql/
+    networks:
+      - app-network
+    depends_on:
+      - nginx
+      - app-pizza
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  dbdata:
+    driver: local
