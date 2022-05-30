@@ -3,7 +3,6 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class OrderRequest extends FormRequest
 {
@@ -24,7 +23,6 @@ class OrderRequest extends FormRequest
      */
     public function rules()
     {
-        $addons = request()->get('order.*.addons');
         return [
             'delivery' => ['required', 'array'],
             'delivery.name' => ['required', 'string', 'max:255'],
@@ -33,12 +31,8 @@ class OrderRequest extends FormRequest
             'order.*.id' => ['required', 'integer', 'exists:pizzas,id'],
             'order.*.count' => ['required', 'integer'],
             'order.*.addons' => ['array'],
-            'order.*.addons.*.id' => [Rule::requiredIf(function () use ($addons) {
-                return (!is_null($addons));
-            }), 'integer', 'exists:ingredients,id'],
-            'order.*.addons.*.count' => [Rule::requiredIf(function () use ($addons) {
-                return (!is_null($addons));
-            }), 'integer']
+            'order.*.addons.*.id' => ['integer', 'exists:ingredients,id'],
+            'order.*.addons.*.count' => ['integer']
         ];
     }
 }
